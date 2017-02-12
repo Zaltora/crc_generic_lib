@@ -27,7 +27,7 @@ typedef uint64_t    crc_64;
 #endif
 
 #ifndef CRC_DEBUG
-#define CRC_DEBUG 1
+#define CRC_DEBUG 0
 #endif
 
 #ifndef CRC_1BYTE_SUPPORT

@@ -46,7 +46,8 @@ static void _##type##_generate_table(config_##type* crcdata) \
 }\
 static type type##_bit_by_bit_fast_upd(config_##type* crcdata, crc_8* p, crc_16 len)\
 {\
-    type i, j, c, bit;\
+    crc_16 i;\
+    type j, c, bit;\
     type crc = crcdata->private.seed_memory ;\
     for (i=0; i<len; i++)\
     {\
@@ -75,7 +76,8 @@ static type type##_bit_by_bit_fast(config_##type* crcdata, crc_8* p, crc_16 len)
 }\
 static type type##_bit_by_bit_upd(config_##type* crcdata, crc_8* p, crc_16 len)\
 {\
-    type i, j, c, bit;\
+    crc_16 i;\
+    type j, c, bit;\
     type crc = crcdata->private.seed_memory;\
     for (i=0; i<len; i++)\
     {\
