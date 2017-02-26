@@ -9,22 +9,7 @@
 #ifndef CRC_CONFIG_H_
 #define CRC_CONFIG_H_
 
-/* system include  */
-#include "espressif/esp_common.h"
-#include "FreeRTOS.h"
-
-#ifndef crc_8
-typedef uint8_t     crc_8;
-#endif
-#ifndef crc_16
-typedef uint16_t    crc_16;
-#endif
-#ifndef crc_32
-typedef uint32_t    crc_32;
-#endif
-#ifndef crc_64
-typedef uint64_t    crc_64;
-#endif
+#include "crc_config_user.h"
 
 #ifndef CRC_DEBUG
 #define CRC_DEBUG 0
@@ -46,7 +31,5 @@ typedef uint64_t    crc_64;
 #ifndef NULL
 #define NULL (void *)0
 #endif
-
-#include "crc_generic.h"
 
 #endif /* CRC_CONFIG_H_ */

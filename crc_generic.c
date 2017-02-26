@@ -14,7 +14,7 @@
 #define debug(fmt, ...)
 #endif
 
-#define crc_set_algo_init(type) \
+#define _CRC_SET_ALGO_SRC(type) \
 static type _##type##_reflect(type crc, int bitnum)\
 {\
     type i, j=1, crcout=0;\
@@ -25,11 +25,13 @@ static type _##type##_reflect(type crc, int bitnum)\
     }\
     return (crcout);\
 }\
-static void _##type##_generate_table(config_##type* crcdata) \
+void type##_generate_table(config_##type* crcdata, type* tab, crc_16 len)\
 {\
+	if (crcdata->order&7)\
+		return;\
     crc_16 i,j;\
     type bit, crc;\
-    for (i=0; i<256; i++)\
+    for (i=0; i<len; i++)\
     {\
         crc=(type)i;\
         if (crcdata->refin) crc=_##type##_reflect(crc, 8);\
@@ -41,15 +43,14 @@ static void _##type##_generate_table(config_##type* crcdata) \
         }\
         if (crcdata->refin) crc = _##type##_reflect(crc, crcdata->order);\
         crc&= crcdata->private.crcmask;\
-        crcdata->private.tab[i] = crc;\
+        tab[i] = crc;\
     }\
 }\
 static type type##_bit_by_bit_fast_upd(config_##type* crcdata, crc_8* p, crc_16 len)\
 {\
-    crc_16 i;\
     type j, c, bit;\
     type crc = crcdata->private.seed_memory ;\
-    for (i=0; i<len; i++)\
+    while (len--)\
     {\
         c = (type)*p++;\
         if (crcdata->refin)\
@@ -76,10 +77,10 @@ static type type##_bit_by_bit_fast(config_##type* crcdata, crc_8* p, crc_16 len)
 }\
 static type type##_bit_by_bit_upd(config_##type* crcdata, crc_8* p, crc_16 len)\
 {\
-    crc_16 i;\
+    crc_8 i;\
     type j, c, bit;\
     type crc = crcdata->private.seed_memory;\
-    for (i=0; i<len; i++)\
+    while (len--)\
     {\
         c = (type)*p++;\
         if (crcdata->refin)\
@@ -225,9 +226,9 @@ void type##_generic_init(config_##type* crcdata, type polynom, type order, type 
         crcdata->private.crcinit_nondirect = crc;\
     }\
 }\
-void type##_generic_select_algo(config_##type* crcdata, type* tab, crc_algo algo, crc_8 cst)\
+void type##_generic_select_algo(config_##type* crcdata, const type* tab, crc_16 len, crc_algo algo)\
 {\
-    if ( tab == NULL || ((crcdata->order&7) && (!cst)) )\
+    if (tab == NULL)\
     {\
         switch (algo)\
         {\
@@ -240,18 +241,15 @@ void type##_generic_select_algo(config_##type* crcdata, type* tab, crc_algo algo
             crcdata->private.crc_update = (type(*)(config_##type*,crc_8*,crc_16))type##_bit_by_bit_fast_upd;\
             break;\
         default:\
-            crcdata->private.crc_compute = (type(*)(config_##type*,crc_8*,crc_16))type##_bit_by_bit_fast;\
-            crcdata->private.crc_update = (type(*)(config_##type*,crc_8*,crc_16))type##_bit_by_bit_fast_upd;\
-            debug("ERROR, invalid algo setting.");\
+            debug("ERROR, invalid algo setting. Keep last selection");\
             break;\
         }\
     }\
     else\
     {\
-        /* generate lookup table if needed and save location pointer */\
-        crcdata->private.tab = tab;\
-        if(!cst)\
-            _##type##_generate_table(crcdata);\
+        /*Save location pointer */\
+        if (len > 256) return;\
+	    crcdata->private.tab = tab;\
         switch (algo)\
         {\
         case CRC_TABLE:\
@@ -263,6 +261,7 @@ void type##_generic_select_algo(config_##type* crcdata, type* tab, crc_algo algo
             crcdata->private.crc_update = (type(*)(config_##type*,crc_8*,crc_16))type##_table_fast_upd;\
             break;\
         default:\
+        debug("ERROR, invalid algo setting. Keep last selection");\
         break;\
         }\
     }\
@@ -280,17 +279,17 @@ type type##_generic_update(config_##type* crcdata, crc_8* p, crc_16 len)\
  * Create all functions for all size variable usage
  */
 #if CRC_1BYTE_SUPPORT == 1
-crc_set_algo_init(crc_8)
+_CRC_SET_ALGO_SRC(crc_8)
 #endif
 
 #if CRC_2BYTE_SUPPORT == 1
-crc_set_algo_init(crc_16)
+_CRC_SET_ALGO_SRC(crc_16)
 #endif
 
 #if CRC_4BYTE_SUPPORT == 1
-crc_set_algo_init(crc_32)
+_CRC_SET_ALGO_SRC(crc_32)
 #endif
 
 #if CRC_8BYTE_SUPPORT == 1
-crc_set_algo_init(crc_64)
+_CRC_SET_ALGO_SRC(crc_64)
 #endif

@@ -25,6 +25,14 @@
 #include "crc_64_lookup_table.h"
 #endif
 
+typedef enum
+{
+    CRC_BIT_TO_BIT = 0,
+    CRC_BIT_TO_BIT_FAST,
+    CRC_TABLE,
+    CRC_TABLE_FAST
+} crc_algo;
+
 #define _CRC_STRUCT(type)  config_##type {\
     type polynom;\
     type crcinit;\
@@ -41,11 +49,11 @@
         type seed_memory;\
         type (*crc_compute)(struct config_##type*, crc_8*,crc_16);\
         type (*crc_update)(struct config_##type*, crc_8*,crc_16);\
-        type* tab;\
+        const type* tab;\
     } private;\
 } config_##type;
 
-#define _crc_prototype(type)\
+#define _CRC_PROTOTYPE(type)\
 /**
  * Initialize crc configuration
  * @param crcdata Pointer to crc descriptor
@@ -60,13 +68,21 @@
 void type##_generic_init(config_##type* crcdata, type polynom, type order, type crcinit,\
         type crcxor, crc_8 direct, crc_8 refin, crc_8 refout);\
 /**
+ * Generate table
+ * @param crcdata Pointer to crc descriptor
+ * @param tab Pointer to  array
+ * @param len Array size
+ */\
+void type##_generate_table(config_##type* crcdata, type* tab, crc_16 len);\
+/**
  * Select algorithm
  * Warning can only generate lookup tab with polynom orders of 8, 16, 24 or 32.
  * @param crcdata Pointer to crc descriptor
  * @param tab Is the CRC lookup table pointer
+ * @param len Array size
  * @param cst Specifies if the tab is constant (will be generated if not)
  */\
-void type##_generic_select_algo(config_##type* crcdata, type* tab, crc_algo algo, crc_8 cst);\
+void type##_generic_select_algo(config_##type* crcdata, const type* tab, crc_16 len, crc_algo algo);\
 /**
  * Compute crc
  * @param crcdata Pointer to crc descriptor
@@ -82,32 +98,24 @@ type type##_generic_compute(config_##type* crcdata, crc_8* p, crc_16 len);\
  */\
 type type##_generic_update(config_##type* crcdata, crc_8* p, crc_16 len);
 
-typedef enum
-{
-    CRC_BIT_TO_BIT = 0,
-    CRC_BIT_TO_BIT_FAST,
-    CRC_TABLE,
-    CRC_TABLE_FAST
-} crc_algo;
-
 #if CRC_1BYTE_SUPPORT
 typedef struct _CRC_STRUCT(crc_8)
-_crc_prototype(crc_8)
+_CRC_PROTOTYPE(crc_8)
 #endif
 
 #if CRC_2BYTE_SUPPORT
 typedef struct _CRC_STRUCT(crc_16)
-_crc_prototype(crc_16)
+_CRC_PROTOTYPE(crc_16)
 #endif
 
 #if CRC_4BYTE_SUPPORT
 typedef struct _CRC_STRUCT(crc_32)
-_crc_prototype(crc_32)
+_CRC_PROTOTYPE(crc_32)
 #endif
 
 #if CRC_8BYTE_SUPPORT
 typedef struct _CRC_STRUCT(crc_64)
-_crc_prototype(crc_64)
+_CRC_PROTOTYPE(crc_64)
 #endif
 
 //More Details abouts crc parameter
